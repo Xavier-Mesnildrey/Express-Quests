@@ -46,5 +46,27 @@ describe("POST /api/users", () => {
     expect(response.status).toEqual(201);
     expect(response.body).toHaveProperty("id");
     expect(typeof response.body.id).toBe("number");
+
+    const [result] = await database.query(
+      "SELECT * FROM users WHERE id=?",
+      response.body.id
+    );
+
+    const [userInDatabase] = result;
+
+    expect(userInDatabase).toHaveProperty("id");
+
+    expect(userInDatabase).toHaveProperty("email");
+    expect(userInDatabase.email).toStrictEqual(newUser.email);
+  });
+
+  it("should return an error", async () => {
+    const userWithMissingProps = { email: "x@wild.co" };
+
+    const response = await request(app)
+      .post("/api/users")
+      .send(userWithMissingProps);
+
+    expect(response.status).toEqual(500);
   });
 });
